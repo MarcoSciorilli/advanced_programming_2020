@@ -1,6 +1,9 @@
 #include <iostream>
 #include <memory> // std::unique_ptr
 #include <utility> // std::move
+#include <iterator>
+#include <algorithm>
+#include <vector>
 
 enum class Method{push_back, push_front};
 
@@ -65,6 +68,18 @@ class List{
     template <typename O>
     void _insert(O&& x, const Method m);
 public:
+
+    template<typename O >
+    class _iterator;
+
+    using iterator = _iterator<T>;
+    using const_iterator = _iterator<const T>;
+    iterator begin() noexcept {return iterator{head.get()};}
+    const iterator begin() const noexcept {return const_iterator{head.get()};}
+
+    auto end() noexcept {return iterator{nullptr};}
+    auto end() const noexcept {return const_iterator{nullptr};}
+
     List() = default;
     ~List() = default;
 
@@ -109,6 +124,47 @@ public:
 
 };
 
+
+template <typename T>
+template <typename O>
+class List<T>::_iterator{
+    using node = typename List<T>::node;
+    node* current;
+public:
+    using value_type = O;
+    using reference = value_type&;
+    using pointer = value_type*;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+
+    explicit _iterator( node * p): current{p} {}
+
+    reference operator*() const{return current -> value;}
+    pointer operator->() const {return &**this;}
+
+    //pre-increment
+    _iterator& operator++(){
+        current = current->next.get();
+        return *this;
+    }
+
+    //post-increment
+    _iterator operator++(int){
+        auto tmp{*this};
+        ++(*this);
+        return tmp;
+    }
+
+    friend
+    bool operator==(_iterator& a, _iterator& b){
+        return a.current == b.current;
+    }
+
+    friend
+    bool operator!=(_iterator& a, _iterator& b){
+        return !(a == b);
+    }
+};
 //template <typename T>
 //void List<T>::insert(const T& x, const Method m){
 //    std::cout << "l-value insert\n";
@@ -157,6 +213,18 @@ int main(){
     l.insert(1, Method::push_back);
     l.insert(5, Method::push_front);
 
+
+    for(auto x : l){
+        std::cout << x << std::endl;
+    }
+
+    std::vector<int> v(3);
+
+    std::copy(l.begin(), l.end(), v.begin());
+
+    for(auto x : v){
+        std::cout << x << std::endl;
+    }
     List<int> l2{l};
 
     l.insert(99, Method::push_front);
