@@ -209,7 +209,7 @@ int main(){
     List<int> l{};
 
     int a = 7;
-    l.insert(a, Method::push_back);
+    l.insert(a, ce::push_back);
     l.insert(1, Method::push_back);
     l.insert(5, Method::push_front);
 
